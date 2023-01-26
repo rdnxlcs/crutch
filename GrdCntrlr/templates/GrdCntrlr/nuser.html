@@ -1,0 +1,41 @@
+{% extends 'GrdCntrlr/base.html' %}
+
+{% block title %}
+Вход
+{% endblock %}
+
+{% block content %}
+<form method="post">
+  {% csrf_token %}
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Вход в аккаунт Электронного Дневника</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+      <div class="form-check my-auto me-2">
+        {{ form.checkbox }}
+        <label class="form-check-label" for="flexCheckDefault">
+          Запомнить меня
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="mb-3 row">
+    <label for="staticEmail" class="col-sm-2 col-form-label">Логин</label>
+    <div class="col-sm-10">
+      {{ form.login }}
+    </div>
+  </div>
+  <div class="mb-3 row">
+    <label for="inputPassword" class="col-sm-2 col-form-label">Пароль</label>
+    <div class="col-sm-10">
+      {{ form.password }}
+    </div>
+  </div>
+  <div class="mb-3 row">
+    <label for="inputPassword" class="col-sm-10 col-form-label"></label>
+    <div class="col-sm-2">
+      <input type="submit" class="btn btn-primary col-sm-12" value="Войти">
+    </div>
+  </div>
+</form>
+{% endblock %}
+      
