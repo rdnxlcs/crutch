@@ -8,4 +8,4 @@ class DataBase(models.Model):
 
 class A(models.Model):
     agrade = models.CharField('Новая Оценка', max_length=3)
-    invis_indx = models.CharField('Индекс agrade', max_length=3)
+    invis_indx = models.CharField('Индекс agrade', max_length=3, default='')

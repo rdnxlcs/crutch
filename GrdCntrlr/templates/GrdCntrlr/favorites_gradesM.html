@@ -29,8 +29,8 @@
 {% block menu %}
 <ul class="nav nav-pills justify-content-center">
   <li class="nav-item"><a href="database_mobile" class="nav-link fw-bolder text-indigo">Профиль</a></li>
-  <li class="nav-item bg-indigo"><a href="grades_mobile" class="nav-link fw-bolder text-white">Оценки</a></li>   
-  <li class="nav-item"><a href="favorite_grades" class="nav-link fw-bolder text-indigo">Избранное</a></li>  
+  <li class="nav-item "><a href="grades_mobile" class="nav-link fw-bolder text-indigo">Оценки</a></li>   
+  <li class="nav-item bg-indigo"><a href="favorite_grades" class="nav-link fw-bolder text-white">Избранное</a></li>  
   <li class="nav-item"><a href="nuser_mobile" class="nav-link fw-bolder text-indigo">Вход</a></li>
   <li class="nav-item"><a href="about_mobile" class="nav-link fw-bolder text-indigo">О нас</a></li>
 </ul>
@@ -43,24 +43,17 @@
   </form>
 </div>
 {% for subject in data %}
+{% if subject.favorite == True %}
 <input type="hidden" id="{{ subject.subject }}G" name="variable" value="{{ subject.graph }}">
 <div class="d-flex justify-content-between flex-wrap row flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <h1 class="h2 col-5 text-truncate" onclick="hdn(this)">{{ subject.subject }}</h1>
   <form method="post" class="col-1">
     {% csrf_token %}
-    {% if subject.favorite == False %}
-    <button class="btn p-0" value="{{ subject.subject }}*0" style="margin-bottom: 0.5rem;" name="favorite" onclick="favorite(this)">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#6610f2" class="bi bi-heart" viewBox="0 0 16 16">
-        <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"></path>
-      </svg>
-    </button>
-    {% else %}
     <button class="btn p-0" value="{{ subject.subject }}*1" style="margin-bottom: 0.5rem;" name="favorite" onclick="favorite(this)">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#6610f2" class="bi bi-heart-fill" viewBox="0 0 16 16">
         <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
       </svg>
     </button>
-    {% endif %}
   </form>
   <form method="post" id="{{ subject.target }}" class="col-2 text">
     {% csrf_token %}
@@ -174,6 +167,7 @@
       });
     </script>
 </div>
+{% endif %}
 {% endfor %}
 {% endblock %}
  

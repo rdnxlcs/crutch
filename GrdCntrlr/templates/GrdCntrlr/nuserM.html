@@ -3,7 +3,15 @@
 {% block title %}
 Вход
 {% endblock %}
-
+{% block menu %}
+<ul class="nav nav-pills justify-content-center">
+  <li class="nav-item"><a href="database_mobile" class="nav-link fw-bolder text-indigo">Профиль</a></li>
+  <li class="nav-item "><a href="grades_mobile" class="nav-link fw-bolder text-indigo">Оценки</a></li>   
+  <li class="nav-item "><a href="favorite_grades" class="nav-link fw-bolder text-indigo">Избранное</a></li>  
+  <li class="nav-item bg-indigo"><a href="nuser_mobile" class="nav-link fw-bolder text-white">Вход</a></li>
+  <li class="nav-item"><a href="about_mobile" class="nav-link fw-bolder text-indigo">О нас</a></li>
+</ul>
+{% endblock %}
 {% block content %}
 <form method="post">
   {% csrf_token %}

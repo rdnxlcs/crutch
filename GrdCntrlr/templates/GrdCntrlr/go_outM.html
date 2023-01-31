@@ -3,12 +3,21 @@
 {% block title %}
 Выйди
 {% endblock %}
-
+{% block menu %}
+<ul class="nav nav-pills justify-content-center">
+  <li class="nav-item"><a href="database_mobile" class="nav-link fw-bolder text-indigo">Профиль</a></li>
+  <li class="nav-item "><a href="grades_mobile" class="nav-link fw-bolder text-indigo">Оценки</a></li>   
+  <li class="nav-item "><a href="favorite_grades" class="nav-link fw-bolder text-indigo">Избранное</a></li>  
+  <li class="nav-item bg-indigo"><a href="nuser_mobile" class="nav-link fw-bolder text-white">Вход</a></li>
+  <li class="nav-item"><a href="about_mobile" class="nav-link fw-bolder text-indigo">О нас</a></li>
+</ul>
+{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">Выйди и зайди нормально</h1>
 </div>
 <div class="table-responsive">
     <p class="text-muted">Вы уже вошли в аккаунт. Необходимо выйти, что бы войти в другой аккаунт.</p>
 </div>
+<a href="/nuser_mobile" class="form-control btn-primary text-decoration-none text-center" onclick="document.cookie = 'id=;max-age=-1'">Выйти</a>
 {% endblock %}

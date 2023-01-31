@@ -1,0 +1,35 @@
+{% extends 'GrdCntrlr/baseM.html' %}
+
+{% block title %}
+Оценки
+{% endblock %}
+{% block menu %}
+<ul class="nav nav-pills justify-content-center">
+  <li class="nav-item"><a href="database_mobile" class="nav-link fw-bolder text-indigo">Профиль</a></li>
+  <li class="nav-item "><a href="grades_mobile" class="nav-link fw-bolder text-indigo">Оценки</a></li>   
+  <li class="nav-item "><a href="favorite_grades" class="nav-link fw-bolder text-indigo">Избранное</a></li>  
+  <li class="nav-item "><a href="nuser_mobile" class="nav-link fw-bolder text-indigo">Вход</a></li>
+  <li class="nav-item bg-indigo"><a href="about_mobile" class="nav-link fw-bolder text-white">О нас</a></li>
+</ul>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <h1 class="h2">Команда разработчиков</h1>
+</div>
+<div class="row align-items-center">
+  <p class="col">Лузганов Александр</p>
+  <p class="col text-end"><a href="https://t.me/rdnxlcs" class="nav-item text-indigo"  onclick="alert('Интим не предлагать, могу не отказаться!')">@rdnxlcs</a></p>
+</div>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <h1 class="h2">Источники</h1>
+</div>
+<div class="row align-items-center">
+  <p class="col">Bootstraр</p>
+  <p class="col text-end"><a href="https://getbootstrap.com/" class="nav-item text-indigo">https://getbootstrap.com</a></p>
+</div>
+<div class="row align-items-center">
+  <p class="col">ЭлЖур</p>
+  <p class="col text-end"><a href="http://eljur.ru/" class="nav-item text-indigo">http://eljur.ru</a></p>
+</div>
+{% endblock %}
+ 
