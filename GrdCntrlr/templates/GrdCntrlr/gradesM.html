@@ -12,6 +12,10 @@
   $(document).ready(function() {
     if (sessionStorage.scrollTop != "undefined") {
       $(window).scrollTop(sessionStorage.scrollTop);
+      var s = '{{ alert }}';
+      if (s != '') {
+        alert('{{ alert }}');
+      } 
   }
   });
   function hdn(el) {
@@ -28,7 +32,7 @@
 {% endblock %}
 {% block menu %}
 <ul class="nav nav-pills justify-content-center">
-  <li class="nav-item"><a href="database_mobile" class="nav-link fw-bolder text-indigo">Профиль</a></li>
+  <li class="nav-item"><a href="profile" class="nav-link fw-bolder text-indigo">Профиль</a></li>
   <li class="nav-item bg-indigo"><a href="grades_mobile" class="nav-link fw-bolder text-white">Оценки</a></li>   
   <li class="nav-item"><a href="favorite_grades" class="nav-link fw-bolder text-indigo">Избранное</a></li>  
   <li class="nav-item"><a href="nuser_mobile" class="nav-link fw-bolder text-indigo">Вход</a></li>

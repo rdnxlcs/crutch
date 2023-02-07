@@ -12,6 +12,7 @@ import math
 import numpy as np
 from itertools import groupby
 import matplotlib
+from random import randint
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
@@ -225,7 +226,7 @@ def get_login(data, request): # Взятие логина пользовател
     try:
         return data[int(request.COOKIES['id'])].login # В cookies хранится id (ix) - индекс пользователя в базе данных
     except KeyError:
-        return 'СКАУ' # Система контроля академической успеваемости
+        return 'ScoutUser' # Система контроля академической успеваемости
 
 def sbjctix(newdata, subject_name):
     for i in range(len(newdata)):
@@ -236,108 +237,13 @@ def sbjctix(newdata, subject_name):
 # -------------------- 
 
 # ----------Функции HTML страниц----------
-def nuser(request): # Страница регестрации или входа в аккаунт
-    data = DataBase.objects.order_by('id') # Массив объектов пользователя (содержит Sub_Grades, login, password и другое)
-    context = { # Словарь передаваемый на HTML страницу
-        'form': DataBaseForm(), # Объект для отправки форм заполнения
-        'login': get_login(data, request) # Отправка логина (необходимо только для вывода логина аккаунт в который вошли в левом верзнем углу)
-    }
-
-    rsn = render(request, 'GrdCntrlr/nuser.html', context)
-    if request.method == 'POST': # При отправке формы
-        browser = webdriver.Safari() # Драйвер на котором работает selenium
-        login = request.POST.get('login') # Введенные данные из формы логин
-        login.replace(' ', '')
-        password = request.POST.get('password') # Введенные данные из формы пароль
-        password.replace(' ', '')
-        checkbox = request.POST.get('checkbox') # Введенные данные из формы запоминать / незапоминать пользователя
-        form = DataBaseForm(request.POST) 
-        if ej_login(browser, login, password): # Происходит попытка входа в аккаунт элжура, если вход получлся
-            if relog_check(data, login, password): # Проверка на наличие введеного логина и пароля в базе данных
-                form.save() # Сохранить введенные данные в бд
-            else: 
-                print('пара - логин и пароль уже зарегестрирована в бд') # Данные не нужно сохранять повторно так как они уже есть в бд
-        else: # Иначе вывести ошибку о неверном логине или пароле
-            print('неверный логин или пароль') 
-            if relog_check(data, login, password): # Но все равно занести данные в бд (сейчас нужно для тестирования, позже ветвление должно быть исключенно)
-                form.save()
-            else: 
-                print('пара - логин и пароль уже зарегестрирована в бд')
-
-        rsn.delete_cookie('id') # После входа удалить предыдущий coockie с индексом пользователя
-        print(id_detect(data, login, password), login, password) 
-
-        if str(checkbox) == 'on': # Если пользователя пожелал запомнить его, установить максимальное время жизни файла coockie
-            rsn.set_cookie('id', id_detect(data, login, password), max_age=315336000) # Заносится только индекс пользователя
-            print(1)
-        else: # Иначе установить время жизни по умолчанию (1 сеанс)
-            rsn.set_cookie('id', id_detect(data, login, password))   
-            print(0)  
-    if len(request.COOKIES) >= 2: # Эта хуйня пока не работает, но по факту если вход прошел успешно то надо переадресовать на другую страницу
-        return render(request, 'GrdCntrlr/go_out.html', context)    
-    else:
-        return rsn
-def database(request): # Страница базы данных
-    data = DataBase.objects.order_by('id')  
-    context = { # Словарь передаваемый на HTML страницу
-        'data': data,
-        'login': get_login(data, request)
-    }
-    return render(request, 'GrdCntrlr/database.html', context)
-def grades(request):
-    graph = []
-    ix = int(request.COOKIES['id'])
-    data = DataBase.objects.order_by('id')
-    if 'refresh' in request.POST: # Обновление списка оценок
-        browser = webdriver.Safari()
-        newDB = DataBase(ix, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(get_all(browser, data, ix)))
-        newDB.save()
-    if 'agrade' in request.POST: # Занесения а-оценки в БД
-        agrade = request.POST.get('agrade') # А-оценка
-        invis_agrade = request.POST.get('invis_agrade') # Индекс оценки: порядковый номер и название предмета (взят из невидимого поля ввода)
-        indx = invis_agrade.split('_')[0]
-        subject_name = invis_agrade.split('_')[1]
-        newdata = json.decode(data[ix].subjects)
-        # Проверка а-оценки на допустимость её значения
-        try:
-            if int(agrade) <= 0 and int(agrade) > 100:
-                agrade = 0
-                print('превышает допустимое значение')
-        except TypeError:
-            agrade = 0
-            print('неверное значение')
-        newdata[sbjctix(newdata, subject_name)].grades[int(indx)].agrade = agrade # Занесения а-оценки в БД
-        newdata[sbjctix(newdata, subject_name)].amean = do_amean(newdata[sbjctix(newdata, subject_name)].grades) # Обновление значения amean
-        newDB = DataBase(ix, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
-        newDB.save()
-    if 'target' in request.POST:
-        target = request.POST.get('target')
-        subject_name = request.POST.get('invis_target')
-        newdata = json.decode(data[ix].subjects)
-
-        num, summ, anum, asumm = num_summ_counter(newdata[sbjctix(newdata, subject_name)].grades)
-        graph = chart(int(target), num, summ, anum, asumm)
-        newdata[sbjctix(newdata, subject_name)].target = target     
-        newdata[sbjctix(newdata, subject_name)].graph = graph 
-        newDB = DataBase(ix, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
-        newDB.save()
-
-    if data[ix].subjects != '':
-        dutu = json.decode(data[ix].subjects)
-    else:
-        dutu = ''
-    context = {
-        'data': dutu,
-        'form': AForm(),
-        'login': get_login(data, request),
-    }
-    return render(request, 'GrdCntrlr/grades.html', context)
-
 
 def nuserM(request): # Страница регестрации или входа в аккаунт
     data = DataBase.objects.order_by('id') # Массив объектов пользователя (содержит Sub_Grades, login, password и другое)
+    alert = ''
     context = { # Словарь передаваемый на HTML страницу
         'form': DataBaseForm(), # Объект для отправки форм заполнения
+        'alert': alert,
     }
 
     rsn = render(request, 'GrdCntrlr/nuserM.html', context)
@@ -355,7 +261,7 @@ def nuserM(request): # Страница регестрации или входа
             else: 
                 print('пара - логин и пароль уже зарегестрирована в бд') # Данные не нужно сохранять повторно так как они уже есть в бд
         else: # Иначе вывести ошибку о неверном логине или пароле
-            print('неверный логин или пароль') 
+            alert = 'Неверный логин или пароль!'
             if relog_check(data, login, password): # Но все равно занести данные в бд (сейчас нужно для тестирования, позже ветвление должно быть исключенно)
                 form.save()
             else: 
@@ -385,144 +291,164 @@ def databaseM(request): # Страница базы данных
     return render(request, 'GrdCntrlr/databaseM.html', context)
 
 def gradesM(request):
-    graph = []
-    ix = int(request.COOKIES['id'])  
-    data = DataBase.objects.order_by('id')
-    if 'refresh' in request.POST: # Обновление списка оценок
-        browser = webdriver.Safari()
-        newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(get_all(browser, data, ix)))
-        newDB.save()
-    if 'agrade' in request.POST: # Занесения а-оценки в БД
-        agrade = request.POST.get('agrade') # А-оценка
-        invis_agrade = request.POST.get('invis_agrade') # Индекс оценки: порядковый номер и название предмета (взят из невидимого поля ввода)
-        indx = invis_agrade.split('_')[0]
-        subject_name = invis_agrade.split('_')[1]
-        newdata = json.decode(data[ix].subjects)
-        # Проверка а-оценки на допустимость её значения
-        try:
-            if int(agrade) <= 0 or int(agrade) > 100:
+    try:
+        graph = []
+        alert = ''
+        ix = int(request.COOKIES['id'])  
+        data = DataBase.objects.order_by('id')
+        fuck = ['Неправильно!', 'Недопустимое значение!', 'Очевидно, что такаго не может быть!', 'Придумай что-нибудь получше!']
+        if 'refresh' in request.POST: # Обновление списка оценок
+            browser = webdriver.Safari()
+            newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(get_all(browser, data, ix)))
+            newDB.save()
+        if 'agrade' in request.POST: # Занесения а-оценки в БД
+            agrade = request.POST.get('agrade') # А-оценка
+            invis_agrade = request.POST.get('invis_agrade') # Индекс оценки: порядковый номер и название предмета (взят из невидимого поля ввода)
+            indx = invis_agrade.split('_')[0]
+            subject_name = invis_agrade.split('_')[1]
+            newdata = json.decode(data[ix].subjects)
+            # Проверка а-оценки на допустимость её значения
+            try:
+                if int(agrade) <= 0 or int(agrade) > 100:
+                    agrade = 0
+                    alert = fuck[randint(0, 3)]
+            except:
                 agrade = 0
-                print('превышает допустимое значение')
-        except:
-            agrade = 0
-            print('неверное значение')
-        newdata[sbjctix(newdata, subject_name)].grades[int(indx)].agrade = agrade # Занесения а-оценки в БД
-        newdata[sbjctix(newdata, subject_name)].amean = do_amean(newdata[sbjctix(newdata, subject_name)].grades) # Обновление значения amean
-        num, summ, anum, asumm = num_summ_counter(newdata[sbjctix(newdata, subject_name)].grades)
-        graph = chart(int(newdata[sbjctix(newdata, subject_name)].target), num, summ, anum, asumm)
-        newdata[sbjctix(newdata, subject_name)].graph = graph 
-        newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
-        newDB.save()
-    if 'target' in request.POST:
+                alert = fuck[randint(0, 3)]
+            newdata[sbjctix(newdata, subject_name)].grades[int(indx)].agrade = agrade # Занесения а-оценки в БД
+            newdata[sbjctix(newdata, subject_name)].amean = do_amean(newdata[sbjctix(newdata, subject_name)].grades) # Обновление значения amean
+            num, summ, anum, asumm = num_summ_counter(newdata[sbjctix(newdata, subject_name)].grades)
+            graph = chart(int(newdata[sbjctix(newdata, subject_name)].target), num, summ, anum, asumm)
+            newdata[sbjctix(newdata, subject_name)].graph = graph 
+            newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
+            newDB.save()
+        if 'target' in request.POST:
 
-        target = request.POST.get('target')
-        subject_name = request.POST.get('invis_target')
-        newdata = json.decode(data[ix].subjects)
+            target = request.POST.get('target')
+            subject_name = request.POST.get('invis_target')
+            newdata = json.decode(data[ix].subjects)
 
-        try:
-            if int(target) <= 10 or int(target) >= 100:
+            try:
+                if int(target) <= 10 or int(target) >= 100:
+                    target = 80
+                    alert = fuck[randint(0, 3)]
+            except:
                 target = 80
-                print('превышает допустимое значение')
-        except:
-            target = 80
-            print('неверное значение')
+                alert = fuck[randint(0, 3)]
 
-        num, summ, anum, asumm = num_summ_counter(newdata[sbjctix(newdata, subject_name)].grades)
-        graph = chart(int(target), num, summ, anum, asumm)
-        newdata[sbjctix(newdata, subject_name)].target = target     
-        newdata[sbjctix(newdata, subject_name)].graph = graph 
-        newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
-        newDB.save()
-    if 'favorite' in request.POST:
-        subject_name = str(request.POST.get('favorite')).split('*')[0]
-        favorite = not bool(int(str(request.POST.get('favorite')).split('*')[1]))
+            num, summ, anum, asumm = num_summ_counter(newdata[sbjctix(newdata, subject_name)].grades)
+            graph = chart(int(target), num, summ, anum, asumm)
+            newdata[sbjctix(newdata, subject_name)].target = target     
+            newdata[sbjctix(newdata, subject_name)].graph = graph 
+            newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
+            newDB.save()
+        if 'favorite' in request.POST:
+            subject_name = str(request.POST.get('favorite')).split('*')[0]
+            favorite = not bool(int(str(request.POST.get('favorite')).split('*')[1]))
 
-        newdata = json.decode(data[ix].subjects)
-        newdata[sbjctix(newdata, subject_name)].favorite = favorite
-        newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
-        newDB.save()
+            newdata = json.decode(data[ix].subjects)
+            newdata[sbjctix(newdata, subject_name)].favorite = favorite
+            newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
+            newDB.save()
 
-    if data[ix].subjects != '':
-        dutu = json.decode(data[ix].subjects)
-    else:
-        dutu = ''
-    context = {
-        'data': dutu,
-        'form': AForm(),
-        'login': get_login(data, request),
-    }
-    return render(request, 'GrdCntrlr/gradesM.html', context)
+        if data[ix].subjects != '':
+            dutu = json.decode(data[ix].subjects)
+        else:
+            dutu = ''
+        context = {
+            'data': dutu,
+            'form': AForm(),
+            'login': get_login(data, request),
+            'alert': alert,
+        }
+        return render(request, 'GrdCntrlr/gradesM.html', context)
+    except:
+        return render(request, 'GrdCntrlr/non-log.html' )
 
 def favM(request):
-    graph = []
-    ix = int(request.COOKIES['id'])  
-    data = DataBase.objects.order_by('id')
-    if 'refresh' in request.POST: # Обновление списка оценок
-        browser = webdriver.Safari()
-        newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(get_all(browser, data, ix)))
-        newDB.save()
-    if 'agrade' in request.POST: # Занесения а-оценки в БД
-        agrade = request.POST.get('agrade') # А-оценка
-        invis_agrade = request.POST.get('invis_agrade') # Индекс оценки: порядковый номер и название предмета (взят из невидимого поля ввода)
-        indx = invis_agrade.split('_')[0]
-        subject_name = invis_agrade.split('_')[1]
-        newdata = json.decode(data[ix].subjects)
-        # Проверка а-оценки на допустимость её значения
-        try:
-            if int(agrade) <= 0 or int(agrade) > 100:
+    try:
+        alert = ''
+        graph = []
+        fuck = ['Неправильно!', 'Недопустимое значение!', 'Очевидно, что такаго не может быть!', 'Придумай что-нибудь получше!']
+        ix = int(request.COOKIES['id'])  
+        data = DataBase.objects.order_by('id')
+        if 'refresh' in request.POST: # Обновление списка оценок
+            browser = webdriver.Safari()
+            newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(get_all(browser, data, ix)))
+            newDB.save()
+        if 'agrade' in request.POST: # Занесения а-оценки в БД
+            agrade = request.POST.get('agrade') # А-оценка
+            invis_agrade = request.POST.get('invis_agrade') # Индекс оценки: порядковый номер и название предмета (взят из невидимого поля ввода)
+            indx = invis_agrade.split('_')[0]
+            subject_name = invis_agrade.split('_')[1]
+            newdata = json.decode(data[ix].subjects)
+            # Проверка а-оценки на допустимость её значения
+            try:
+                if int(agrade) <= 0 or int(agrade) > 100:
+                    agrade = 0
+                    alert = fuck[randint(0, 3)]
+            except:
                 agrade = 0
-                print('превышает допустимое значение')
-        except:
-            agrade = 0
-            print('неверное значение')
-        newdata[sbjctix(newdata, subject_name)].grades[int(indx)].agrade = agrade # Занесения а-оценки в БД
-        newdata[sbjctix(newdata, subject_name)].amean = do_amean(newdata[sbjctix(newdata, subject_name)].grades) # Обновление значения amean
-        num, summ, anum, asumm = num_summ_counter(newdata[sbjctix(newdata, subject_name)].grades)
-        graph = chart(int(newdata[sbjctix(newdata, subject_name)].target), num, summ, anum, asumm)
-        newdata[sbjctix(newdata, subject_name)].graph = graph 
-        newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
-        newDB.save()
-    if 'target' in request.POST:
+                alert = fuck[randint(0, 3)]
+            newdata[sbjctix(newdata, subject_name)].grades[int(indx)].agrade = agrade # Занесения а-оценки в БД
+            newdata[sbjctix(newdata, subject_name)].amean = do_amean(newdata[sbjctix(newdata, subject_name)].grades) # Обновление значения amean
+            num, summ, anum, asumm = num_summ_counter(newdata[sbjctix(newdata, subject_name)].grades)
+            graph = chart(int(newdata[sbjctix(newdata, subject_name)].target), num, summ, anum, asumm)
+            newdata[sbjctix(newdata, subject_name)].graph = graph 
+            newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
+            newDB.save()
+        if 'target' in request.POST:
 
-        target = request.POST.get('target')
-        subject_name = request.POST.get('invis_target')
-        newdata = json.decode(data[ix].subjects)
+            target = request.POST.get('target')
+            subject_name = request.POST.get('invis_target')
+            newdata = json.decode(data[ix].subjects)
 
-        try:
-            if int(target) <= 10 or int(target) >= 100:
+            try:
+                if int(target) <= 10 or int(target) >= 100:
+                    target = 80
+                    alert = fuck[randint(0, 3)]
+            except:
                 target = 80
-                print('превышает допустимое значение')
-        except:
-            target = 80
-            print('неверное значение')
+                alert = fuck[randint(0, 3)]
 
-        num, summ, anum, asumm = num_summ_counter(newdata[sbjctix(newdata, subject_name)].grades)
-        graph = chart(int(target), num, summ, anum, asumm)
-        newdata[sbjctix(newdata, subject_name)].target = target     
-        newdata[sbjctix(newdata, subject_name)].graph = graph 
-        newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
-        newDB.save()
-    if 'favorite' in request.POST:
-        subject_name = str(request.POST.get('favorite')).split('*')[0]
-        favorite = not bool(int(str(request.POST.get('favorite')).split('*')[1]))
+            num, summ, anum, asumm = num_summ_counter(newdata[sbjctix(newdata, subject_name)].grades)
+            graph = chart(int(target), num, summ, anum, asumm)
+            newdata[sbjctix(newdata, subject_name)].target = target     
+            newdata[sbjctix(newdata, subject_name)].graph = graph 
+            newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
+            newDB.save()
+        if 'favorite' in request.POST:
+            subject_name = str(request.POST.get('favorite')).split('*')[0]
+            favorite = not bool(int(str(request.POST.get('favorite')).split('*')[1]))
 
-        newdata = json.decode(data[ix].subjects)
-        newdata[sbjctix(newdata, subject_name)].favorite = favorite
-        newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
-        newDB.save()
+            newdata = json.decode(data[ix].subjects)
+            newdata[sbjctix(newdata, subject_name)].favorite = favorite
+            newDB = DataBase(ix + 1, data[ix].login, data[ix].password, data[ix].checkbox, json.encode(newdata))
+            newDB.save()
 
-    if data[ix].subjects != '':
-        dutu = json.decode(data[ix].subjects)
-    else:
-        dutu = ''
-    context = {
-        'data': dutu,
-        'form': AForm(),
-        'login': get_login(data, request),
-    }
-    return render(request, 'GrdCntrlr/favorites_gradesM.html', context)
+        if data[ix].subjects != '':
+            dutu = json.decode(data[ix].subjects)
+        else:
+            dutu = ''
+        context = {
+            'data': dutu,
+            'form': AForm(),
+            'login': get_login(data, request),
+            'alert': alert,
+        }
+        return render(request, 'GrdCntrlr/favorites_gradesM.html', context)
+    except:
+        return render(request, 'GrdCntrlr/non-logF.html' )
 
 
 def aboutM(request):
     return render(request, 'GrdCntrlr/aboutM.html')
+
+def profile(request):
+    data = DataBase.objects.order_by('id')  
+    context = { # Словарь передаваемый на HTML страницу
+        'data': data,
+        'login': get_login(data, request)
+    }
+    return render(request, 'GrdCntrlr/profile.html', context)
 # --------------------

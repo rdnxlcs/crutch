@@ -1,0 +1,27 @@
+{% extends 'GrdCntrlr/baseM.html' %}
+
+{% block title %}
+Оценки
+{% endblock %}
+{% block menu %}
+<ul class="nav nav-pills justify-content-center">
+  <li class="nav-item bg-indigo"><a href="profile" class="nav-link fw-bolder text-white">Профиль</a></li>
+  <li class="nav-item "><a href="grades_mobile" class="nav-link fw-bolder text-indigo">Оценки</a></li>   
+  <li class="nav-item "><a href="favorite_grades" class="nav-link fw-bolder text-indigo">Избранное</a></li>  
+  <li class="nav-item "><a href="nuser_mobile" class="nav-link fw-bolder text-indigo">Вход</a></li>
+  <li class="nav-item"><a href="about_mobile" class="nav-link fw-bolder text-indigo">О нас</a></li>
+</ul>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="#6610f2" class="bi bi-person-circle" viewBox="0 0 16 16">
+    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+  </svg>
+  <h1 class="h2 mb-0">{{ login }}</h1>
+</div>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <h1 class="h2 mb-0">Руководство пользователя</h1>
+</div>
+{% endblock %}
+ 
