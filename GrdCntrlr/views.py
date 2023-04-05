@@ -203,7 +203,7 @@ def relog_check(data, login, password): # Проверка на наличие �
         else:
             continue
     return True
-
+#бубыбэбэыбуэы
 def ej_login(browser, login, password): # Вход в аккаунт элжур
     browser.get('https://gymn32.eljur.ru/authorize') # Переход на страницу авторизации 
     login_form = browser.find_element(By.XPATH, '//input[@autocomplete = "username"]') # Поиск поля ввода логина
